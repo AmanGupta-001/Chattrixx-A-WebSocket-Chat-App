@@ -1,109 +1,277 @@
-<h1 align="center"/>Chat App</h1>
+# 💬 Chattrixx — A Real-Time WebSocket Chat App
 
-<p align="center">A WebSocket-based chat application built with <a href="https://github.com/tiangolo/fastapi">FastAPI</a>
+<p align="center">
+  <img src="readme_files/chat.png" alt="Chat Interface" width="700"/>
 </p>
 
-## Table of Contents
+A full-stack, real-time group chat application built with **FastAPI**, **WebSockets**, **PostgreSQL**, and a vanilla HTML/CSS/JS frontend — all containerized with **Docker Compose**.
 
-- [Overview](#overview)
-  - [How It Works](#how-it-works)
-    - [Features](#features)
-- [How to run it?](#how-to-run)
-- [Samples](#samples)
-- [ToDo](#todo)
+---
 
-# Overview
+## ✨ Features
 
-This project is a WebSocket chat application created using FastAPI. It allows users to chat with others [**asynchronously**](https://stackoverflow.com/questions/748175/asynchronous-vs-synchronous-execution-what-is-the-difference) in **real-time**, **join groups**, **send** and **receive messages**, and more.<br>
+- 🔐 **JWT Authentication** — Secure login with token-based auth
+- 💬 **Real-Time Messaging** — Instant message delivery via WebSockets
+- 👥 **Group Chat Rooms** — Create and join groups by unique address
+- 📬 **Unread Message Tracking** — Offline users receive missed messages on reconnect
+- ✏️ **Edit & Delete Messages** — With live broadcast of changes to all online members
+- 👤 **User Profiles** — Display name, bio, and profile picture support
+- 🛡️ **Role-Based Access** — Admin and Member roles per group
+- 🐘 **PostgreSQL** — Persistent, production-grade database
+- 🗄️ **pgAdmin** — Built-in database GUI for easy management
+- 🐳 **Docker Compose** — One-command setup for the entire stack
 
-FrontEnd Connect to websocket and api with raw JavaScript and for styling uses bootstrap and css
+---
 
-## How It Works
+## 🖼️ Screenshots
 
-By sending information with WebSockets, user can receive unread and new messages and send messages and also receive text changes such as edit and delete.
+| Login | Group List | Chat |
+|-------|-----------|------|
+| ![Login](readme_files/login.png) | ![Groups](readme_files/group_list.png) | ![Chat](readme_files/chat.png) |
 
-<div align="center">
-<img src="readme_files/unread_message.png" width="710" height="380"/>
-</div>
+| Unread Messages | API Docs |
+|-----------------|---------|
+| ![Unread](readme_files/unread_message.png) | ![API](readme_files/api.png) |
 
-Also broadcast 'changes' and 'Send Message' are similar to this
+---
 
-you can see how change broadcast work<sub> (Codes have been shortened for display. See here for full codes: <a href="backend/chat/views/websocket.py">websocket.py</a>)<sub>
-
-```python
-async def broadcast_changes(
-    group_id: int,
-    message_id: int,
-    new_text: str | None = None,
-    change_type: models.ChangeType,
-    db: Session,
-) -> None:
-  ...
-  online_users = set(websocket_connections.keys())
-  await asyncio.gather(
-      *[
-          send_change_to_user(
-              member.user.id, changed_value, online_users=online_users
-          )
-          for member in group.members
-      ]
-  )
-
-async def send_change_to_user(
-    user_id: int, change_data: dict, online_users: set
-) -> None:
-  ...
-  await connection.send_text(json.dumps(change_data))
+## 🏗️ Architecture
 
 ```
+┌─────────────────────────────────────────────┐
+│                Docker Compose               │
+│                                             │
+│  ┌──────────┐    ┌──────────┐               │
+│  │  Nginx   │    │ FastAPI  │               │
+│  │ :80      │───▶│ :8000    │               │
+│  │ Frontend │    │ Backend  │               │
+│  └──────────┘    └────┬─────┘               │
+│                       │                     │
+│              ┌────────▼────────┐            │
+│              │   PostgreSQL    │            │
+│              │   :5432         │            │
+│              └────────────────┘            │
+│                                             │
+│  ┌──────────┐                               │
+│  │ pgAdmin  │ :5050                         │
+│  └──────────┘                               │
+└─────────────────────────────────────────────┘
+```
 
-### Features
+---
 
-- **Real-time WebSocket** chat
-- Written as **async**
-- User **authentication** and **authorization**
-- Group **creation** and **management**
-- **Sending** and **receiving** messages
-- **Editing** and **deleting** messages
+## 🚀 Quick Start
 
-# How to run?
+### Prerequisites
 
-we need to get three docker images
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+- Git
 
-- 1.**Python** to run BackEnd and [Uvicorn](https://www.uvicorn.org/)
-- 2.**Nginx** to run FrontEnd
-- 3.**Postgres** to run DataBase
+### 1. Clone the repository
 
 ```bash
-# clone the project
-git clone https://github.com/houshmand-2005/chat_app
-# go to the folder
-cd chat_app
-# run project with docker
-docker-compose up -d
+git clone https://github.com/AmanGupta-001/Chattrixx-A-WebSocket-Chat-App.git
+cd Chattrixx-A-WebSocket-Chat-App/chat_app-houshmand
 ```
 
-# Samples
+### 2. Create your environment file
 
-<img src="readme_files/chat.png"/>
+```bash
+cp .env.example .env
+```
 
-<img src="readme_files/group_list.png" height="310" width="180"/>
+Edit `.env` with your settings (see [Environment Variables](#-environment-variables)).
 
-<img src="readme_files/login.png" height="310" width="310"/>
+### 3. Start the application
 
-<img src="readme_files/chat_unread.png"  height="300" width="210"/>
+```bash
+docker compose up --build
+```
 
-<hr>
-This is list of available APIs:<br>
-<img src="readme_files/api.png" height="495" width="570"/>
+That's it! The full stack will be up and running.
 
-# ToDo
+---
 
-These are the things I want to do
+## 🌐 Access the App
 
-- Add validation (like email validation username validation and ...)
-- Make schemas with [Pydantic](https://pydantic.dev/) for each model(now it is a little incomplete and some models don't have it)
-- Make FrontEnd more beautiful and make it more clear (This will probably be hard. I'm not very good at css and html😁)
-- Support sending photos and files
-- Support replay on message
-- Add a cache service for handel unread messages and more (Like **redis**)
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Frontend** | http://localhost | Chat UI served by Nginx |
+| **Backend API** | http://localhost:8000 | FastAPI backend |
+| **API Docs** | http://localhost:8000/docs | Interactive Swagger UI |
+| **pgAdmin** | http://localhost:5050 | Database management GUI |
+
+> **pgAdmin credentials:** `admin@admin.com` / `admin`
+
+---
+
+## 🔌 API Endpoints
+
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/token` | Login and get JWT access token |
+| `GET`  | `/health` | Health check |
+
+### Users
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/user/create/` | Register a new user |
+| `GET`  | `/user/me/` | Get current user profile |
+| `PUT`  | `/user/update/` | Update user profile |
+
+### Groups
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/group/create/` | Create a new chat group |
+| `POST` | `/group/join` | Join a group by address |
+| `GET`  | `/group/{id}/members` | List group members |
+| `GET`  | `/group/{id}/messages` | Get group message history |
+
+### Messages
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `PUT`  | `/message/{id}/edit` | Edit a sent message |
+| `DELETE` | `/message/{id}/delete` | Delete a message |
+
+### WebSockets
+| Endpoint | Description |
+|----------|-------------|
+| `WS /send-message?token=...&group_id=...` | Send real-time messages |
+| `WS /get-unread-messages?token=...&group_id=...` | Receive messages (including unread) |
+
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the `chat_app-houshmand/` directory:
+
+```env
+# Database
+DATABASE_URL=postgresql://root:1234@db:5432/postgres
+
+# JWT
+SECRET_KEY=your-super-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+| Technology | Purpose |
+|-----------|---------|
+| **FastAPI** | High-performance async web framework |
+| **WebSockets** | Real-time bidirectional communication |
+| **SQLAlchemy 2.0** | ORM for database interactions |
+| **PostgreSQL** | Relational database |
+| **psycopg3** | PostgreSQL driver |
+| **python-jose** | JWT token handling |
+| **bcrypt** | Password hashing |
+| **Pydantic v2** | Data validation and serialization |
+| **Uvicorn** | ASGI server |
+
+### Frontend
+| Technology | Purpose |
+|-----------|---------|
+| **HTML5 / CSS3** | Structure and styling |
+| **Vanilla JavaScript** | WebSocket client logic |
+| **Nginx** | Static file serving |
+
+### Infrastructure
+| Technology | Purpose |
+|-----------|---------|
+| **Docker Compose** | Multi-container orchestration |
+| **PostgreSQL 16** | Production database |
+| **pgAdmin 4** | Database GUI |
+
+---
+
+## 📁 Project Structure
+
+```
+chat_app-houshmand/
+├── backend/
+│   ├── chat/
+│   │   ├── views/
+│   │   │   ├── auth.py         # Login & token endpoints
+│   │   │   ├── groups.py       # Group management endpoints
+│   │   │   ├── messages.py     # Message edit/delete endpoints
+│   │   │   ├── user.py         # User profile endpoints
+│   │   │   └── websocket.py    # WebSocket handlers
+│   │   ├── database.py         # SQLAlchemy engine & session
+│   │   ├── models.py           # Database models
+│   │   ├── schema.py           # Pydantic schemas
+│   │   ├── crud.py             # Database operations
+│   │   ├── setting.py          # App configuration
+│   │   └── utils/
+│   │       ├── jwt.py          # JWT helpers
+│   │       └── exception.py    # Custom exceptions
+│   ├── main.py                 # App entry point
+│   ├── requirements.txt        # Python dependencies
+│   └── Dockerfile
+├── frontend/
+│   ├── index.html              # Group list page
+│   ├── login.html              # Login page
+│   ├── chat.html               # Chat room page
+│   ├── create_user.html        # Registration page
+│   ├── script.js               # WebSocket & chat logic
+│   ├── group_list.js           # Group list logic
+│   ├── style.css               # Chat styles
+│   └── style_index.css         # Index/landing styles
+├── docker-compose.yaml
+└── README.md
+```
+
+---
+
+## 🔧 Manual Setup (Without Docker)
+
+<details>
+<summary>Click to expand</summary>
+
+### Backend
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # Linux/Mac
+
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Frontend
+
+Serve the `frontend/` folder with any static file server:
+
+```bash
+# Using Python
+cd frontend
+python -m http.server 80
+```
+
+</details>
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add some amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">Built with ❤️ using FastAPI & WebSockets</p>
